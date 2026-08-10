@@ -9,6 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --navy:#151d34; --navy-2:#1c2745; --navy-3:#242f52;
@@ -552,6 +554,52 @@ Zeynep Demir"></textarea></div>
 <div id="printArea"></div>
 
 <script>
+// ===== FIREBASE AYARLARI =====
+// Aşağıdaki bilgileri kendi Firebase projenizden alıp buraya yapıştırın.
+// (Firebase Console > Project settings > General > "Your apps" > Web app > SDK setup and configuration)
+const firebaseConfig = {
+  apiKey: "AIzaSyDuOjOUrrHn_3NripRCcjxGXzPOCJAQsJk",
+  authDomain: "kutuphanem-2a495.firebaseapp.com",
+  projectId: "kutuphanem-2a495",
+  storageBucket: "kutuphanem-2a495.firebasestorage.app",
+  messagingSenderId: "182283727888",
+  appId: "1:182283727888:web:cb48e94cd3cb7ad0ef8695"
+};
+
+firebase.initializeApp(firebaseConfig);
+const _db = firebase.firestore();
+const _FS_COLLECTION = 'kutuphane';
+
+function _fsSanitizeKey(key){
+  // Firestore doküman ID'leri "/" içeremez; güvenli olsun diye değiştiriyoruz.
+  return String(key).replace(/\//g, '__');
+}
+
+// window.storage ile aynı arayüzü (get/set/delete/list) sağlayan,
+// verileri Firebase Firestore'da saklayan uyumluluk katmanı.
+window.storage = {
+  async get(key, shared){
+    const snap = await _db.collection(_FS_COLLECTION).doc(_fsSanitizeKey(key)).get();
+    if(!snap.exists) return null;
+    return { key, value: snap.data().value, shared: !!shared };
+  },
+  async set(key, value, shared){
+    await _db.collection(_FS_COLLECTION).doc(_fsSanitizeKey(key)).set({ value });
+    return { key, value, shared: !!shared };
+  },
+  async delete(key, shared){
+    await _db.collection(_FS_COLLECTION).doc(_fsSanitizeKey(key)).delete();
+    return { key, deleted: true, shared: !!shared };
+  },
+  async list(prefix, shared){
+    const snap = await _db.collection(_FS_COLLECTION).get();
+    const keys = [];
+    snap.forEach(d => { if(!prefix || d.id.startsWith(_fsSanitizeKey(prefix))) keys.push(d.id); });
+    return { keys, prefix, shared: !!shared };
+  }
+};
+// ===== FIREBASE AYARLARI SONU =====
+
 const STORAGE_KEY = 'kutuphane-data';
 let books = [], loans = [], waitlist = [], members = [], actionLog = [];
 let trash = { books: [], members: [] };
