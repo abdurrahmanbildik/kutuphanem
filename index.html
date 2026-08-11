@@ -27,6 +27,10 @@
   v1.6  Raf görünümü (kitap sırtları) karanlık modda hep açık/krem renkte kalıyor
         ve yazılar okunaksızlaşıyordu; artık raf, kitap sırtı ve yazı renkleri
         koyu/açık moda göre otomatik uyarlanıyor
+  v1.7  Mobilde gerçek bir uygulama hissi için alt gezinme çubuğu (tab bar) eklendi:
+        Panel / Kitaplar / ortada büyük (+) Ekle butonu / Ödünç / Menü.
+        (+) butonu Kitap Ekle, Üye Ekle, Ödünç Ver, Rapor Oluştur seçeneklerini
+        alttan açılan bir panelde gösteriyor. Panel/menü açıkken tab bar gizleniyor.
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -343,10 +347,31 @@
     .rp-info-grid{ grid-template-columns:1fr 1fr; }
   }
 
+  /* ===== Mobil alt gezinme çubuğu (tab bar) — gerçek mobil uygulama hissi ===== */
+  .mobile-tabbar{ display:none; }
+  .fab-sheet-backdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,35,0.45); z-index:220; }
+  .fab-sheet-backdrop.show{ display:block; }
+  .fab-sheet{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:230; background:var(--card); border-radius:18px 18px 0 0; padding:10px 14px calc(14px + env(safe-area-inset-bottom)); box-shadow:0 -10px 30px rgba(0,0,0,0.2); }
+  .fab-sheet.show{ display:block; }
+  .fab-sheet::before{ content:""; display:block; width:38px; height:4px; background:var(--border); border-radius:99px; margin:6px auto 14px; }
+  .fab-sheet-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .fab-sheet-item{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 8px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:12.5px; font-weight:600; cursor:pointer; }
+  .fab-sheet-item .ic{ width:38px; height:38px; border-radius:50%; background:var(--blue-l); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:17px; }
+  @media (max-width:720px){
+    .mobile-tabbar{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:120; background:var(--card); border-top:1px solid var(--border); padding:6px 4px calc(6px + env(safe-area-inset-bottom)); align-items:center; justify-content:space-around; box-shadow:0 -4px 18px rgba(0,0,0,0.08); }
+    .mobile-tabbar button{ background:none; border:none; color:var(--text-3); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9.5px; font-weight:600; padding:6px 4px; border-radius:10px; cursor:pointer; flex:1; }
+    .mobile-tabbar button .mt-icon{ font-size:18px; line-height:1; }
+    .mobile-tabbar button.active{ color:var(--blue); }
+    .mobile-tabbar .mt-fab{ flex:0 0 auto; margin-top:-26px; }
+    .mobile-tabbar .mt-fab .mt-icon{ width:50px; height:50px; border-radius:50%; background:var(--blue); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(47,111,237,0.45); }
+    .mobile-tabbar .mt-fab{ color:var(--text-3); }
+    .content{ padding-bottom:88px; }
+    body.sidebar-is-open .mobile-tabbar, body.rightpanel-is-open .mobile-tabbar{ display:none; }
+  }
   @media (max-width:400px){
     .stat-grid{ grid-template-columns: 1fr 1fr; }
     .brand span{ display:none; }
-    .content{ padding:12px 10px 70px; }
+    .content{ padding-left:10px; padding-right:10px; }
   }
 </style>
 </head>
@@ -384,7 +409,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.6</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.7</p>
   </aside>
 
   <div class="main-col">
@@ -407,6 +432,25 @@
   <aside class="rightpanel" id="rightPanel">
     <div class="empty"><div class="big">Hiçbir şey seçilmedi</div><p style="font-size:12.5px;">Bir kitaba veya üyeye tıklayınca detaylar burada görünür.</p></div>
   </aside>
+</div>
+
+<!-- Mobil alt gezinme çubuğu -->
+<nav class="mobile-tabbar" id="mobileTabbar">
+  <button data-tab-page="dashboard" class="active"><span class="mt-icon">▦</span>Panel</button>
+  <button data-tab-page="kitaplar"><span class="mt-icon">📗</span>Kitaplar</button>
+  <button class="mt-fab" id="mtFabBtn"><span class="mt-icon">+</span>Ekle</button>
+  <button data-tab-page="odunc"><span class="mt-icon">↗</span>Ödünç</button>
+  <button id="mtMenuBtn"><span class="mt-icon">☰</span>Menü</button>
+</nav>
+
+<div class="fab-sheet-backdrop" id="fabSheetBackdrop"></div>
+<div class="fab-sheet" id="fabSheet">
+  <div class="fab-sheet-grid">
+    <div class="fab-sheet-item" id="fabAddBook"><div class="ic">📗</div>Kitap Ekle</div>
+    <div class="fab-sheet-item" id="fabAddMember"><div class="ic">👤</div>Üye Ekle</div>
+    <div class="fab-sheet-item" id="fabLend"><div class="ic">↗</div>Ödünç Ver</div>
+    <div class="fab-sheet-item" id="fabReport"><div class="ic">📊</div>Rapor Oluştur</div>
+  </div>
 </div>
 
 <!-- Kitap ekle/düzenle modal -->
@@ -741,13 +785,25 @@ function markVolumeLost(bookId, volNo){
 function setActivePage(page){
   currentPage = page;
   document.querySelectorAll('#navlist button').forEach(b => b.classList.toggle('active', b.dataset.page===page));
+  document.querySelectorAll('#mobileTabbar button[data-tab-page]').forEach(b => b.classList.toggle('active', b.dataset.tabPage===page));
   renderPage();
   closeSidebar();
 }
 document.querySelectorAll('#navlist button[data-page]').forEach(btn => btn.addEventListener('click', () => setActivePage(btn.dataset.page)));
+document.querySelectorAll('#mobileTabbar button[data-tab-page]').forEach(btn => btn.addEventListener('click', () => setActivePage(btn.dataset.tabPage)));
 
-function openSidebar(){ document.getElementById('sidebarEl').classList.add('open'); document.getElementById('sidebarBackdrop').classList.add('show'); }
-function closeSidebar(){ document.getElementById('sidebarEl').classList.remove('open'); document.getElementById('sidebarBackdrop').classList.remove('show'); }
+function openSidebar(){ document.getElementById('sidebarEl').classList.add('open'); document.getElementById('sidebarBackdrop').classList.add('show'); document.body.classList.add('sidebar-is-open'); }
+function closeSidebar(){ document.getElementById('sidebarEl').classList.remove('open'); document.getElementById('sidebarBackdrop').classList.remove('show'); document.body.classList.remove('sidebar-is-open'); }
+document.getElementById('mtMenuBtn').addEventListener('click', openSidebar);
+
+function closeFabSheet(){ document.getElementById('fabSheet').classList.remove('show'); document.getElementById('fabSheetBackdrop').classList.remove('show'); }
+document.getElementById('mtFabBtn').addEventListener('click', () => { document.getElementById('fabSheet').classList.add('show'); document.getElementById('fabSheetBackdrop').classList.add('show'); });
+document.getElementById('fabSheetBackdrop').addEventListener('click', closeFabSheet);
+document.getElementById('fabAddBook').addEventListener('click', () => { closeFabSheet(); setActivePage('kitaplar'); setTimeout(openAddBook, 0); });
+document.getElementById('fabAddMember').addEventListener('click', () => { closeFabSheet(); setActivePage('uyeler'); setTimeout(openAddMemberModal, 0); });
+document.getElementById('fabLend').addEventListener('click', () => { closeFabSheet(); openLoanModal(null); });
+document.getElementById('fabReport').addEventListener('click', () => { closeFabSheet(); setActivePage('raporlar'); });
+
 document.getElementById('hamburgerBtn').addEventListener('click', () => {
   document.getElementById('sidebarEl').classList.contains('open') ? closeSidebar() : openSidebar();
 });
@@ -1701,10 +1757,10 @@ function renderRightPanel(){
   const backdrop = document.getElementById('rpBackdrop');
   if(!rpMode){
     el.innerHTML = `<div class="empty"><div class="big">Hiçbir şey seçilmedi</div><p style="font-size:12.5px;">Bir kitaba veya üyeye tıklayınca detaylar burada görünür.</p></div>`;
-    el.classList.remove('rp-open'); backdrop.classList.remove('show');
+    el.classList.remove('rp-open'); backdrop.classList.remove('show'); document.body.classList.remove('rightpanel-is-open');
     return;
   }
-  el.classList.add('rp-open'); backdrop.classList.add('show');
+  el.classList.add('rp-open'); backdrop.classList.add('show'); document.body.classList.add('rightpanel-is-open');
   el.innerHTML = `
     <button class="rp-close" id="rpCloseBtn">&times;</button>
     <div class="rp-tabs">
