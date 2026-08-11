@@ -22,6 +22,8 @@
   v1.4  Masaüstünde kitap/üye paneli açılınca ekranı karartan katman (backdrop)
         genişlik sınırı olmadan tetikleniyor ve tüm tıklamaları engelliyordu;
         artık sadece dar ekranlarda (panelin kayan pencere olduğu durumlarda) çalışıyor
+  v1.5  Dashboard'daki özet kartlarına (Toplam Kitap, Kayıtlı Üye, Ödünç Verilen,
+        Geciken Kitap) tıklayınca ilgili sayfaya gidiliyor
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -103,6 +105,8 @@
 
   .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
   .stat-card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; align-items:center; gap:12px; }
+  .stat-card.clickable-stat{ cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
+  .stat-card.clickable-stat:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(20,25,45,0.1); border-color:var(--blue); }
   .stat-icon{ width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
   .stat-icon.blue{ background:var(--blue-l); color:var(--blue); }
   .stat-icon.green{ background:var(--green-l); color:var(--green); }
@@ -373,7 +377,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.4</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.5</p>
   </aside>
 
   <div class="main-col">
@@ -741,6 +745,10 @@ document.getElementById('hamburgerBtn').addEventListener('click', () => {
   document.getElementById('sidebarEl').classList.contains('open') ? closeSidebar() : openSidebar();
 });
 document.getElementById('sidebarBackdrop').addEventListener('click', closeSidebar);
+document.getElementById('pageContent').addEventListener('click', (e) => {
+  const gotoEl = e.target.closest('[data-goto]');
+  if(gotoEl) setActivePage(gotoEl.dataset.goto);
+});
 
 function renderPage(){
   const el = document.getElementById('pageContent');
@@ -769,10 +777,10 @@ function statCardsHtml(){
   const activeLoans = loans.filter(l=>!l.returnDate);
   const overdue = activeLoans.filter(isOverdue);
   return `<div class="stat-grid">
-    <div class="stat-card"><div class="stat-icon blue">📚</div><div><div class="n">${totalTitles.toLocaleString('tr-TR')}</div><div class="l">Toplam Kitap</div></div></div>
-    <div class="stat-card"><div class="stat-icon green">👥</div><div><div class="n">${members.length.toLocaleString('tr-TR')}</div><div class="l">Kayıtlı Üye</div></div></div>
-    <div class="stat-card"><div class="stat-icon amber">↗</div><div><div class="n">${activeLoans.length.toLocaleString('tr-TR')}</div><div class="l">Ödünç Verilen</div></div></div>
-    <div class="stat-card"><div class="stat-icon red">⚠</div><div><div class="n">${overdue.length.toLocaleString('tr-TR')}</div><div class="l">Geciken Kitap</div></div></div>
+    <div class="stat-card clickable-stat" data-goto="kitaplar"><div class="stat-icon blue">📚</div><div><div class="n">${totalTitles.toLocaleString('tr-TR')}</div><div class="l">Toplam Kitap</div></div></div>
+    <div class="stat-card clickable-stat" data-goto="uyeler"><div class="stat-icon green">👥</div><div><div class="n">${members.length.toLocaleString('tr-TR')}</div><div class="l">Kayıtlı Üye</div></div></div>
+    <div class="stat-card clickable-stat" data-goto="odunc"><div class="stat-icon amber">↗</div><div><div class="n">${activeLoans.length.toLocaleString('tr-TR')}</div><div class="l">Ödünç Verilen</div></div></div>
+    <div class="stat-card clickable-stat" data-goto="geciken"><div class="stat-icon red">⚠</div><div><div class="n">${overdue.length.toLocaleString('tr-TR')}</div><div class="l">Geciken Kitap</div></div></div>
   </div>`;
 }
 
