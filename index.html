@@ -45,6 +45,12 @@
         birlikte repoya yüklenmeli — aşağıdaki adımlara bakın).
   v1.9  "Menü" panelindeki liste, ızgara/kart tipi butonlara çevrildi (ikon +
         kısa etiket, 3 sütun) — Hızlı İşlemler (+) panelindeki kartlarla tutarlı
+  v2.0  Kitaplar sayfası ve Raf görünümü modernize edildi: araç çubuğu kart
+        içine alınıp filtreler/eylemler olarak ikiye ayrıldı, görünüm anahtarı
+        (Tablo/Raf) mavi vurgulu segmentli hale getirildi; raf görünümünde
+        gruplar artık ikonlu (📍 raf / 🏷 tür) başlıklar ve sayaç rozetiyle
+        gösteriliyor, kitap sırtlarına daha belirgin gölge/hover animasyonu ve
+        modern yuvarlak cilt rozeti eklendi, raf tahtasına derinlik verildi.
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -145,6 +151,7 @@
   @media (max-width:900px){ .grid2, .grid3{ grid-template-columns:1fr; } }
 
   .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+  .card.no-chrome{ background:transparent; border:none; padding:0; }
   .card h3{ font-size:14px; font-weight:600; margin:0 0 12px; display:flex; align-items:center; justify-content:space-between; }
   .card h3 .sm{ font-size:11.5px; color:var(--text-2); font-weight:400; }
 
@@ -157,33 +164,37 @@
   .btn.block{ width:100%; text-align:left; display:flex; align-items:center; gap:8px; }
   .btn:hover{ opacity:.92; }
 
-  .toolbar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; align-items:center; }
+  .toolbar{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 12px; }
+  .toolbar-filters{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; flex:1; }
+  .toolbar-actions{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-left:auto; }
 
-  .view-toggle{ display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-  .view-toggle button{ padding:8px 14px; font-size:12.5px; border:none; background:var(--card); color:var(--text-2); cursor:pointer; }
-  .view-toggle button.active{ background:var(--navy); color:#fff; }
+  .view-toggle{ display:flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--bg); padding:2px; }
+  .view-toggle button{ padding:7px 14px; font-size:12.5px; font-weight:600; border:none; border-radius:8px; background:transparent; color:var(--text-2); cursor:pointer; transition:background .12s ease, color .12s ease; }
+  .view-toggle button.active{ background:var(--blue); color:#fff; box-shadow:0 2px 8px rgba(47,111,237,0.35); }
 
-  .shelfview-wrap{ background: var(--shelf-bg); border:1px solid var(--border); border-radius:12px; padding:22px; }
-  .shelf-section{ margin-bottom: 30px; }
+  .shelfview-wrap{ background: var(--shelf-bg); border:1px solid var(--border); border-radius:14px; padding:24px; }
+  .shelf-section{ margin-bottom: 32px; }
   .shelf-section:last-child{ margin-bottom:0; }
-  .shelf-label{ display:flex; align-items:baseline; gap:8px; font-size:12.5px; font-weight:600; letter-spacing:.3px; color:var(--text); margin-bottom:10px; }
-  .shelf-label::before{ content:"—"; color:var(--text-3); }
-  .shelf-label .cnt{ opacity:.55; font-size:11px; font-weight:400; }
-  .bookcase{ position:relative; padding: 0 4px 22px; }
-  .bookcase::after{ content:""; position:absolute; left:0; right:0; bottom:6px; height:10px; background:linear-gradient(180deg, var(--shelf-wood-1), var(--shelf-wood-2)); border-radius:3px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
-  .shelf-flex{ display:flex; flex-wrap:wrap; align-items:flex-end; gap: 3px; min-height: 150px; position:relative; z-index:1; }
-  .spine{ width: 42px; height: 150px; border-radius: 4px 4px 2px 2px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 0 3px 6px; cursor:pointer; position:relative; background:var(--spine-bg); border:1px solid var(--spine-border); box-shadow: 2px 3px 8px rgba(60,50,30,0.1); transition: transform .15s ease, box-shadow .15s ease; }
-  .spine:hover{ transform: translateY(-5px); box-shadow: 3px 8px 14px rgba(60,50,30,0.18); }
-  .spine::before{ content:""; display:block; width:100%; height:7px; border-radius:4px 4px 0 0; margin-bottom:8px; flex-shrink:0; }
+  .shelf-label{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; letter-spacing:.3px; color:var(--text); margin-bottom:12px; }
+  .shelf-label .shelf-ic{ width:22px; height:22px; border-radius:6px; background:var(--card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+  .shelf-label .cnt{ font-size:10.5px; font-weight:600; color:var(--text-2); background:var(--card); border:1px solid var(--border); padding:2px 8px; border-radius:999px; }
+  .bookcase{ position:relative; padding: 0 6px 24px; }
+  .bookcase::before{ content:""; position:absolute; left:0; right:0; bottom:15px; height:1px; background:rgba(255,255,255,0.35); }
+  .bookcase::after{ content:""; position:absolute; left:-2px; right:-2px; bottom:6px; height:12px; background:linear-gradient(180deg, var(--shelf-wood-1), var(--shelf-wood-2)); border-radius:4px; box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25); }
+  .shelf-flex{ display:flex; flex-wrap:wrap; align-items:flex-end; gap: 4px; min-height: 150px; position:relative; z-index:1; }
+  .spine{ width: 42px; height: 150px; border-radius: 6px 6px 3px 3px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 0 3px 6px; cursor:pointer; position:relative; background:linear-gradient(180deg, var(--spine-bg), var(--spine-bg)); border:1px solid var(--spine-border); box-shadow: 2px 4px 10px rgba(30,25,15,0.14); transition: transform .16s ease, box-shadow .16s ease; }
+  .spine:hover{ transform: translateY(-6px) scale(1.02); box-shadow: 3px 10px 18px rgba(30,25,15,0.22); z-index:2; }
+  .spine::before{ content:""; display:block; width:100%; height:8px; border-radius:5px 5px 0 0; margin-bottom:9px; flex-shrink:0; }
   .spine.st-okunacak::before{ background: var(--text-3); }
   .spine.st-okunuyor::before{ background: var(--blue); }
   .spine.st-okundu::before{ background: var(--green); }
-  .spine .spine-title{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Inter',sans-serif; font-weight:500; font-size: 11px; color: var(--spine-text); max-height: 118px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; line-height:1.2; flex:1; }
-  .spine .dot{ position:absolute; bottom: 6px; left:50%; transform: translateX(-50%); width: 7px; height: 7px; border-radius: 50%; }
+  .spine .spine-title{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Inter',sans-serif; font-weight:600; font-size: 11px; color: var(--spine-text); max-height: 116px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; line-height:1.2; flex:1; }
+  .spine .dot{ position:absolute; bottom: 7px; left:50%; transform: translateX(-50%); width: 7px; height: 7px; border-radius: 50%; box-shadow:0 0 0 2px var(--spine-bg); }
   .spine .dot.ok{ background:var(--green); }
   .spine .dot.none{ background:var(--red); }
   .spine .dot.wait{ background:var(--amber); }
-  .spine .cilt-badge{ position:absolute; top:10px; right:3px; font-size:8px; font-weight:600; background:var(--bg); color:var(--text-2); padding:1px 4px; border-radius:3px; border:1px solid var(--border); }
+  .spine .cilt-badge{ position:absolute; top:11px; right:-4px; font-size:8px; font-weight:700; background:var(--blue); color:#fff; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.25); }
+  .shelf-empty-hint{ text-align:center; padding:40px 20px; color:var(--text-2); font-size:12.5px; }
 
   th.sortable{ cursor:pointer; user-select:none; }
   th.sortable .arrow{ opacity:.5; font-size:10px; margin-left:3px; }
@@ -193,9 +204,10 @@
   .pagination button{ border:1px solid var(--border); background:var(--card); border-radius:6px; padding:5px 10px; cursor:pointer; }
   .pagination button:disabled{ opacity:.4; cursor:not-allowed; }
   .filters{ display:flex; gap:6px; flex-wrap:wrap; }
-  .chip{ font-size:12px; padding:7px 12px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text-2); cursor:pointer; }
+  .chip{ font-size:12px; padding:7px 12px; border-radius:999px; border:1px solid var(--border); background:var(--bg); color:var(--text-2); cursor:pointer; font-weight:500; transition:background .12s ease, color .12s ease, border-color .12s ease; }
   .chip.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
-  select.sel{ padding:8px 10px; border-radius:8px; border:1px solid var(--border); font-size:12.5px; background:var(--card); }
+  select.sel{ padding:8px 12px; border-radius:9px; border:1px solid var(--border); font-size:12.5px; background:var(--bg); color:var(--text); cursor:pointer; }
+  select.sel:hover{ border-color:var(--blue); }
 
   table.tbl{ width:100%; border-collapse:collapse; font-size:13px; }
   table.tbl th{ text-align:left; padding:8px 10px; color:var(--text-2); font-weight:500; font-size:11.5px; text-transform:uppercase; letter-spacing:.3px; border-bottom:1px solid var(--border); }
@@ -329,7 +341,8 @@
     .grid2, .grid3{ grid-template-columns: 1fr; }
 
     .toolbar{ flex-direction:column; align-items:stretch; gap:8px; }
-    .toolbar > *{ width:100%; }
+    .toolbar-filters, .toolbar-actions{ width:100%; flex-direction:column; align-items:stretch; margin-left:0; }
+    .toolbar-filters > *, .toolbar-actions > *{ width:100%; }
     .toolbar .view-toggle{ display:flex; }
     .toolbar .view-toggle button{ flex:1; padding:11px 6px; }
     .toolbar .filters{ width:100%; }
@@ -430,7 +443,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.9</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.0</p>
   </aside>
 
   <div class="main-col">
@@ -989,42 +1002,46 @@ function pageBooks(){
   <p class="page-title">Kitaplar</p>
   <p class="page-sub">${books.length} başlık &middot; ${books.reduce((s,b)=>s+bookTotalCopies(b),0)} nüsha</p>
   <div class="toolbar">
-    <div class="view-toggle">
-      <button data-view="tablo" class="${viewPrefs.viewMode==='tablo'?'active':''}">📋 Tablo</button>
-      <button data-view="raf" class="${viewPrefs.viewMode==='raf'?'active':''}">📚 Raf</button>
+    <div class="toolbar-filters">
+      <div class="view-toggle">
+        <button data-view="tablo" class="${viewPrefs.viewMode==='tablo'?'active':''}">📋 Tablo</button>
+        <button data-view="raf" class="${viewPrefs.viewMode==='raf'?'active':''}">📚 Raf</button>
+      </div>
+      <select class="sel" id="genreFilter"><option value="hepsi">Tüm Türler</option></select>
+      <select class="sel" id="languageFilter"><option value="hepsi">Tüm Diller</option></select>
+      <div class="filters" id="availFilters">
+        <button class="chip ${viewPrefs.avail==='hepsi'?'active':''}" data-avail="hepsi">Tümü</button>
+        <button class="chip ${viewPrefs.avail==='musait'?'active':''}" data-avail="musait">Müsait</button>
+        <button class="chip ${viewPrefs.avail==='tukendi'?'active':''}" data-avail="tukendi">Tükendi</button>
+      </div>
+      <select class="sel" id="sortSelect">
+        <option value="date_desc">Eklenme: Yeni → Eski</option>
+        <option value="date_asc">Eklenme: Eski → Yeni</option>
+        <option value="title_asc">Başlık: A → Z</option>
+        <option value="title_desc">Başlık: Z → A</option>
+        <option value="author_asc">Yazar: A → Z</option>
+        <option value="genre_asc">Tür: A → Z</option>
+        <option value="shelf_asc">Raf: A → Z</option>
+        <option value="avail_desc">Müsaitlik: Çoktan Aza</option>
+        <option value="avail_asc">Müsaitlik: Azdan Çoğa</option>
+      </select>
+      <select class="sel" id="groupSelect">
+        <option value="yok">Gruplama Yok</option>
+        <option value="raf">Rafa Göre Grupla</option>
+        <option value="tur">Türe Göre Grupla</option>
+      </select>
+      <select class="sel" id="pageSizeSelect">
+        <option value="10">10 / sayfa</option>
+        <option value="25">25 / sayfa</option>
+        <option value="50">50 / sayfa</option>
+        <option value="all">Tümü</option>
+      </select>
     </div>
-    <select class="sel" id="genreFilter"><option value="hepsi">Tüm Türler</option></select>
-    <select class="sel" id="languageFilter"><option value="hepsi">Tüm Diller</option></select>
-    <div class="filters" id="availFilters">
-      <button class="chip ${viewPrefs.avail==='hepsi'?'active':''}" data-avail="hepsi">Tümü</button>
-      <button class="chip ${viewPrefs.avail==='musait'?'active':''}" data-avail="musait">Müsait</button>
-      <button class="chip ${viewPrefs.avail==='tukendi'?'active':''}" data-avail="tukendi">Tükendi</button>
+    <div class="toolbar-actions">
+      <button class="btn" id="bulkAddBtn">＋ Toplu Ekle</button>
+      <button class="btn" id="exportBooksBtn">⬇ CSV</button>
+      <button class="btn primary" id="openAddBook">+ Kitap Ekle</button>
     </div>
-    <select class="sel" id="sortSelect">
-      <option value="date_desc">Eklenme: Yeni → Eski</option>
-      <option value="date_asc">Eklenme: Eski → Yeni</option>
-      <option value="title_asc">Başlık: A → Z</option>
-      <option value="title_desc">Başlık: Z → A</option>
-      <option value="author_asc">Yazar: A → Z</option>
-      <option value="genre_asc">Tür: A → Z</option>
-      <option value="shelf_asc">Raf: A → Z</option>
-      <option value="avail_desc">Müsaitlik: Çoktan Aza</option>
-      <option value="avail_asc">Müsaitlik: Azdan Çoğa</option>
-    </select>
-    <select class="sel" id="groupSelect">
-      <option value="yok">Gruplama Yok</option>
-      <option value="raf">Rafa Göre Grupla</option>
-      <option value="tur">Türe Göre Grupla</option>
-    </select>
-    <select class="sel" id="pageSizeSelect">
-      <option value="10">10 / sayfa</option>
-      <option value="25">25 / sayfa</option>
-      <option value="50">50 / sayfa</option>
-      <option value="all">Tümü</option>
-    </select>
-    <button class="btn" id="bulkAddBtn">＋ Toplu Ekle</button>
-    <button class="btn" id="exportBooksBtn">⬇ CSV</button>
-    <button class="btn primary" id="openAddBook">+ Kitap Ekle</button>
   </div>
   <div id="bulkBarArea"></div>
   <div class="card" id="booksCardArea"><div id="booksTableArea"></div></div>`;
@@ -1081,10 +1098,11 @@ function shelfSpineHtml(b){
 function shelfViewHtml(list, groupMode, sortMode){
   const key = groupMode === 'raf' ? 'location' : 'genre';
   const label = groupMode === 'raf' ? 'Rafı Belirtilmemiş' : 'Türü Belirtilmemiş';
+  const icon = groupMode === 'raf' ? '📍' : '🏷';
   const groups = {};
   list.forEach(b => { const g = b[key] && b[key].trim() ? b[key].trim() : label; (groups[g]=groups[g]||[]).push(b); });
   const names = Object.keys(groups).sort((a,b)=>{ const aU=a===label, bU=b===label; if(aU&&!bU) return 1; if(bU&&!aU) return -1; return a.localeCompare(b,'tr'); });
-  return `<div class="shelfview-wrap">${names.map(g => `<div class="shelf-section"><div class="shelf-label">${escapeHtml(g)}<span class="cnt">${groups[g].length} kitap</span></div><div class="bookcase"><div class="shelf-flex">${sortBooks(groups[g],sortMode).map(shelfSpineHtml).join('')}</div></div></div>`).join('')}</div>`;
+  return `<div class="shelfview-wrap">${names.map(g => `<div class="shelf-section"><div class="shelf-label"><span class="shelf-ic">${icon}</span>${escapeHtml(g)}<span class="cnt">${groups[g].length} kitap</span></div><div class="bookcase"><div class="shelf-flex">${sortBooks(groups[g],sortMode).map(shelfSpineHtml).join('')}</div></div></div>`).join('')}</div>`;
 }
 
 function getFilteredBooks(){
@@ -1099,7 +1117,10 @@ function getFilteredBooks(){
 
 function renderBooksTable(){
   const area = document.getElementById('booksTableArea'); if(!area) return;
+  const cardArea = document.getElementById('booksCardArea');
   let list = getFilteredBooks();
+
+  if(cardArea) cardArea.classList.toggle('no-chrome', viewPrefs.viewMode === 'raf');
 
   if(list.length===0){ area.innerHTML = `<div class="empty"><div class="big">Kitap bulunamadı</div><p>Filtreyi değiştirin ya da yeni kitap ekleyin.</p></div>`; document.getElementById('bulkBarArea').innerHTML=''; return; }
 
