@@ -43,6 +43,8 @@
         Ayarlar + Tema değiştir). Ayrıca "Uygulamayı Kur" seçeneği eklendi
         (manifest.json, sw.js, icon-192.png, icon-512.png dosyaları da bu sürümle
         birlikte repoya yüklenmeli — aşağıdaki adımlara bakın).
+  v1.9  "Menü" panelindeki liste, ızgara/kart tipi butonlara çevrildi (ikon +
+        kısa etiket, 3 sütun) — Hızlı İşlemler (+) panelindeki kartlarla tutarlı
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -369,10 +371,10 @@
   .fab-sheet-item{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 8px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:12.5px; font-weight:600; cursor:pointer; }
   .fab-sheet-item .ic{ width:38px; height:38px; border-radius:50%; background:var(--blue-l); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:17px; }
   .more-sheet{ max-height:78vh; overflow-y:auto; }
-  .more-sheet-list{ display:flex; flex-direction:column; gap:2px; margin-bottom:10px; }
-  .more-sheet-list button{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none; border:none; padding:13px 8px; font-size:14px; color:var(--text); border-radius:10px; cursor:pointer; }
-  .more-sheet-list button:active{ background:var(--bg); }
-  .more-sheet-list button .mt-icon{ width:20px; text-align:center; font-size:16px; flex-shrink:0; }
+  .more-sheet-list{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+  .more-sheet-list button{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; width:100%; text-align:center; background:var(--bg); border:1px solid var(--border); padding:14px 4px; font-size:11px; font-weight:600; color:var(--text); border-radius:12px; cursor:pointer; }
+  .more-sheet-list button:active{ background:var(--border); }
+  .more-sheet-list button .mt-icon{ width:36px; height:36px; border-radius:50%; background:var(--blue-l); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
   .more-sheet-footer{ padding-top:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
   .more-sheet-footer button{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13.5px; font-weight:600; cursor:pointer; }
   .more-sheet-footer button.install{ background:var(--blue); color:#fff; border-color:var(--blue); }
@@ -428,7 +430,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.8</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.9</p>
   </aside>
 
   <div class="main-col">
