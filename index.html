@@ -9,6 +9,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<!--
+  KÜTÜPHANEM — DEĞİŞİKLİK GEÇMİŞİ (CHANGELOG)
+  ============================================
+  v1.0  Orijinal uygulama (window.storage tabanlı, Claude artifact ortamı)
+  v1.1  Firebase Firestore entegrasyonu — veriler artık kalıcı bulut veritabanında
+        window.storage arayüzü Firestore ile uyumlu hale getirildi (get/set/delete/list)
+  v1.2  Düzenleme/Ödünç Verme pencereleri kitap detay panelinin altında kalıyordu
+        .overlay z-index 100 → 300 yapılarak düzeltildi
+  v1.3  Mobil tasarım yenilendi: alttan açılan (bottom-sheet) modallar, daha büyük
+        dokunma alanları, tek sütun düzenler, sıkışık üst bar ve kartlar düzeltildi
+-->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
@@ -265,18 +276,63 @@
   /* Mobile overrides — kept last so they win the cascade over base component rules above */
   @media (max-width:720px){
     .shell{ grid-template-columns: 1fr; }
-    .sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:200; transform:translateX(-100%); transition:transform .25s ease; width:240px; height:100vh; }
+    .sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:200; transform:translateX(-100%); transition:transform .25s ease; width:250px; height:100vh; padding-top:max(18px, env(safe-area-inset-top)); }
     .sidebar.open{ transform:translateX(0); box-shadow:4px 0 24px rgba(0,0,0,0.35); }
-    .hamburger-btn{ display:flex !important; }
+    .hamburger-btn{ display:flex !important; width:40px; height:40px; }
     .rightpanel{ width:100%; max-width:100%; }
     .topbar{ padding:10px 12px; gap:8px; }
-    .content{ padding:14px 12px 50px; }
-    .modal{ padding:18px; border-radius:12px; }
+    .search-wrap{ max-width:none; }
+    .search-wrap input{ padding:11px 14px 11px 34px; font-size:14.5px; }
+    .content{ padding:14px 12px 70px; }
+    .page-title{ font-size:18px; }
+
+    /* Alttan açılan (bottom-sheet) modallar: dokunmatik ekranda kullanımı çok daha kolay */
+    .overlay{ align-items:flex-end; padding:0; }
+    .modal{ width:100%; max-width:100%; border-radius:18px 18px 0 0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); max-height:92vh; margin:0; }
+    .modal-wide{ max-width:100%; }
+    .modal::before{ content:""; display:block; width:38px; height:4px; background:var(--border); border-radius:99px; margin:0 auto 14px; }
+    .modal h2{ font-size:16.5px; }
+    .close-x{ font-size:22px; padding:4px; }
+
     .row2, .row3{ grid-template-columns: 1fr; }
     .grid2, .grid3{ grid-template-columns: 1fr; }
-    .toolbar > select, .toolbar > .btn.primary, .toolbar > .view-toggle{ flex:1 1 auto; }
+
+    .toolbar{ flex-direction:column; align-items:stretch; gap:8px; }
+    .toolbar > *{ width:100%; }
+    .toolbar .view-toggle{ display:flex; }
+    .toolbar .view-toggle button{ flex:1; padding:11px 6px; }
     .toolbar .filters{ width:100%; }
-    .stat-grid{ grid-template-columns: repeat(2,1fr); }
+
+    .stat-grid{ grid-template-columns: repeat(2,1fr); gap:10px; }
+    .stat-card{ padding:12px; gap:10px; }
+    .stat-card .n{ font-size:17px; }
+    .stat-icon{ width:36px; height:36px; font-size:16px; }
+
+    /* Daha büyük, parmakla kolay dokunulur alanlar */
+    .btn{ min-height:42px; padding:10px 16px; font-size:13.5px; }
+    .btn.sm{ min-height:36px; }
+    .icon-btn{ width:40px; height:40px; }
+    .modal-actions{ flex-direction:column-reverse; gap:8px; }
+    .modal-actions .btn{ width:100%; justify-content:center; }
+    .chip{ padding:9px 14px; font-size:12.5px; }
+    .field input, .field select, .field textarea{ padding:11px 12px; font-size:15px; }
+    select.sel{ padding:10px 12px; }
+
+    .spine{ width:38px; height:135px; }
+    .spine .spine-title{ font-size:10px; max-height:105px; }
+    .shelfview-wrap{ padding:14px; }
+
+    table.tbl tr{ padding:10px 6px; border-radius:12px; }
+    table.tbl td{ font-size:12.5px; }
+
+    .rp-cover{ height:130px; }
+    .rp-info-grid{ grid-template-columns:1fr 1fr; }
+  }
+
+  @media (max-width:400px){
+    .stat-grid{ grid-template-columns: 1fr 1fr; }
+    .brand span{ display:none; }
+    .content{ padding:12px 10px 70px; }
   }
 </style>
 </head>
@@ -314,6 +370,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.3</p>
   </aside>
 
   <div class="main-col">
