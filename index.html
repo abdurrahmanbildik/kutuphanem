@@ -24,6 +24,9 @@
         artık sadece dar ekranlarda (panelin kayan pencere olduğu durumlarda) çalışıyor
   v1.5  Dashboard'daki özet kartlarına (Toplam Kitap, Kayıtlı Üye, Ödünç Verilen,
         Geciken Kitap) tıklayınca ilgili sayfaya gidiliyor
+  v1.6  Raf görünümü (kitap sırtları) karanlık modda hep açık/krem renkte kalıyor
+        ve yazılar okunaksızlaşıyordu; artık raf, kitap sırtı ve yazı renkleri
+        koyu/açık moda göre otomatik uyarlanıyor
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -37,6 +40,8 @@
     --bg:#f3f5f9; --card:#ffffff;
     --text:#1a2138; --text-2:#697086; --text-3:#9aa1b5;
     --border:#e6e8f0;
+    --shelf-bg:#f7f4ee; --shelf-wood-1:#d9c7a8; --shelf-wood-2:#b89a72;
+    --spine-bg:#fffdf8; --spine-border:#e8e0d0; --spine-text:#1a2138;
   }
   body[data-theme="dark"]{
     --navy:#0e1424; --navy-2:#161d33; --navy-3:#1c2438;
@@ -47,6 +52,8 @@
     --bg:#0c1120; --card:#141b2e;
     --text:#e7ebf5; --text-2:#9aa4bd; --text-3:#69728c;
     --border:#26304a;
+    --shelf-bg:#1a2036; --shelf-wood-1:#3d3222; --shelf-wood-2:#2a2318;
+    --spine-bg:#20273f; --spine-border:#323c5c; --spine-text:#e7ebf5;
   }
   body[data-theme="dark"] .badge.green{ color:#34d17c; } body[data-theme="dark"] .badge.red{ color:#f16a86; } body[data-theme="dark"] .badge.amber{ color:#fbbf40; }
   body[data-theme="dark"] .book-thumb{ background:var(--blue-l); }
@@ -138,22 +145,22 @@
   .view-toggle button{ padding:8px 14px; font-size:12.5px; border:none; background:var(--card); color:var(--text-2); cursor:pointer; }
   .view-toggle button.active{ background:var(--navy); color:#fff; }
 
-  .shelfview-wrap{ background: #f7f4ee; border:1px solid var(--border); border-radius:12px; padding:22px; }
+  .shelfview-wrap{ background: var(--shelf-bg); border:1px solid var(--border); border-radius:12px; padding:22px; }
   .shelf-section{ margin-bottom: 30px; }
   .shelf-section:last-child{ margin-bottom:0; }
   .shelf-label{ display:flex; align-items:baseline; gap:8px; font-size:12.5px; font-weight:600; letter-spacing:.3px; color:var(--text); margin-bottom:10px; }
   .shelf-label::before{ content:"—"; color:var(--text-3); }
   .shelf-label .cnt{ opacity:.55; font-size:11px; font-weight:400; }
   .bookcase{ position:relative; padding: 0 4px 22px; }
-  .bookcase::after{ content:""; position:absolute; left:0; right:0; bottom:6px; height:10px; background:linear-gradient(180deg, #d9c7a8, #b89a72); border-radius:3px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
+  .bookcase::after{ content:""; position:absolute; left:0; right:0; bottom:6px; height:10px; background:linear-gradient(180deg, var(--shelf-wood-1), var(--shelf-wood-2)); border-radius:3px; box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
   .shelf-flex{ display:flex; flex-wrap:wrap; align-items:flex-end; gap: 3px; min-height: 150px; position:relative; z-index:1; }
-  .spine{ width: 42px; height: 150px; border-radius: 4px 4px 2px 2px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 0 3px 6px; cursor:pointer; position:relative; background:#fffdf8; border:1px solid #e8e0d0; box-shadow: 2px 3px 8px rgba(60,50,30,0.1); transition: transform .15s ease, box-shadow .15s ease; }
+  .spine{ width: 42px; height: 150px; border-radius: 4px 4px 2px 2px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 0 3px 6px; cursor:pointer; position:relative; background:var(--spine-bg); border:1px solid var(--spine-border); box-shadow: 2px 3px 8px rgba(60,50,30,0.1); transition: transform .15s ease, box-shadow .15s ease; }
   .spine:hover{ transform: translateY(-5px); box-shadow: 3px 8px 14px rgba(60,50,30,0.18); }
   .spine::before{ content:""; display:block; width:100%; height:7px; border-radius:4px 4px 0 0; margin-bottom:8px; flex-shrink:0; }
   .spine.st-okunacak::before{ background: var(--text-3); }
   .spine.st-okunuyor::before{ background: var(--blue); }
   .spine.st-okundu::before{ background: var(--green); }
-  .spine .spine-title{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Inter',sans-serif; font-weight:500; font-size: 11px; color: var(--text); max-height: 118px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; line-height:1.2; flex:1; }
+  .spine .spine-title{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Inter',sans-serif; font-weight:500; font-size: 11px; color: var(--spine-text); max-height: 118px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; line-height:1.2; flex:1; }
   .spine .dot{ position:absolute; bottom: 6px; left:50%; transform: translateX(-50%); width: 7px; height: 7px; border-radius: 50%; }
   .spine .dot.ok{ background:var(--green); }
   .spine .dot.none{ background:var(--red); }
@@ -377,7 +384,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.5</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.6</p>
   </aside>
 
   <div class="main-col">
