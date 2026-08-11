@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kütüphane Yönetim Sistemi</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#151d34">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kütüphanem">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
@@ -31,6 +37,12 @@
         Panel / Kitaplar / ortada büyük (+) Ekle butonu / Ödünç / Menü.
         (+) butonu Kitap Ekle, Üye Ekle, Ödünç Ver, Rapor Oluştur seçeneklerini
         alttan açılan bir panelde gösteriyor. Panel/menü açıkken tab bar gizleniyor.
+  v1.8  Mobilde eski yan menü (sidebar) tamamen kaldırıldı; "Menü" sekmesi artık
+        alttan açılan, kaydırılabilir tam bir liste gösteriyor (Üyeler, İadeler,
+        Rezervasyon, Geciken, Tahsilat, Raporlar, Envanter, Geçmiş, Çöp, Yardım,
+        Ayarlar + Tema değiştir). Ayrıca "Uygulamayı Kur" seçeneği eklendi
+        (manifest.json, sw.js, icon-192.png, icon-512.png dosyaları da bu sürümle
+        birlikte repoya yüklenmeli — aşağıdaki adımlara bakın).
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -294,9 +306,8 @@
   /* Mobile overrides — kept last so they win the cascade over base component rules above */
   @media (max-width:720px){
     .shell{ grid-template-columns: 1fr; }
-    .sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:200; transform:translateX(-100%); transition:transform .25s ease; width:250px; height:100vh; padding-top:max(18px, env(safe-area-inset-top)); }
-    .sidebar.open{ transform:translateX(0); box-shadow:4px 0 24px rgba(0,0,0,0.35); }
-    .hamburger-btn{ display:flex !important; width:40px; height:40px; }
+    .sidebar{ display:none; }
+    .hamburger-btn{ display:none !important; }
     .rightpanel{ width:100%; max-width:100%; }
     .topbar{ padding:10px 12px; gap:8px; }
     .search-wrap{ max-width:none; }
@@ -357,6 +368,14 @@
   .fab-sheet-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .fab-sheet-item{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 8px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:12.5px; font-weight:600; cursor:pointer; }
   .fab-sheet-item .ic{ width:38px; height:38px; border-radius:50%; background:var(--blue-l); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:17px; }
+  .more-sheet{ max-height:78vh; overflow-y:auto; }
+  .more-sheet-list{ display:flex; flex-direction:column; gap:2px; margin-bottom:10px; }
+  .more-sheet-list button{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none; border:none; padding:13px 8px; font-size:14px; color:var(--text); border-radius:10px; cursor:pointer; }
+  .more-sheet-list button:active{ background:var(--bg); }
+  .more-sheet-list button .mt-icon{ width:20px; text-align:center; font-size:16px; flex-shrink:0; }
+  .more-sheet-footer{ padding-top:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+  .more-sheet-footer button{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13.5px; font-weight:600; cursor:pointer; }
+  .more-sheet-footer button.install{ background:var(--blue); color:#fff; border-color:var(--blue); }
   @media (max-width:720px){
     .mobile-tabbar{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:120; background:var(--card); border-top:1px solid var(--border); padding:6px 4px calc(6px + env(safe-area-inset-bottom)); align-items:center; justify-content:space-around; box-shadow:0 -4px 18px rgba(0,0,0,0.08); }
     .mobile-tabbar button{ background:none; border:none; color:var(--text-3); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9.5px; font-weight:600; padding:6px 4px; border-radius:10px; cursor:pointer; flex:1; }
@@ -409,7 +428,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.7</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.8</p>
   </aside>
 
   <div class="main-col">
@@ -450,6 +469,27 @@
     <div class="fab-sheet-item" id="fabAddMember"><div class="ic">👤</div>Üye Ekle</div>
     <div class="fab-sheet-item" id="fabLend"><div class="ic">↗</div>Ödünç Ver</div>
     <div class="fab-sheet-item" id="fabReport"><div class="ic">📊</div>Rapor Oluştur</div>
+  </div>
+</div>
+
+<div class="fab-sheet-backdrop" id="moreSheetBackdrop"></div>
+<div class="fab-sheet more-sheet" id="moreSheet">
+  <div class="more-sheet-list">
+    <button data-page="uyeler"><span class="mt-icon">👤</span>Üyeler</button>
+    <button data-page="iadeler"><span class="mt-icon">↩</span>İadeler</button>
+    <button data-page="rezervasyon"><span class="mt-icon">⏳</span>Rezervasyonlar</button>
+    <button data-page="geciken"><span class="mt-icon">⚠</span>Geciken Kitaplar</button>
+    <button data-page="tahsilat"><span class="mt-icon">₺</span>Tahsilat</button>
+    <button data-page="raporlar"><span class="mt-icon">📊</span>Raporlar</button>
+    <button data-page="envanter"><span class="mt-icon">🗂</span>Envanter</button>
+    <button data-page="gecmis"><span class="mt-icon">🕒</span>İşlem Geçmişi</button>
+    <button data-page="cop"><span class="mt-icon">🗑</span>Çöp Kutusu</button>
+    <button data-page="yardim"><span class="mt-icon">❓</span>Yardım</button>
+    <button data-page="ayarlar"><span class="mt-icon">⚙</span>Ayarlar</button>
+  </div>
+  <div class="more-sheet-footer">
+    <button id="moreThemeToggle">🌗 Tema Değiştir</button>
+    <button id="moreInstallBtn" class="install">📲 Uygulamayı Kur</button>
   </div>
 </div>
 
@@ -794,7 +834,29 @@ document.querySelectorAll('#mobileTabbar button[data-tab-page]').forEach(btn => 
 
 function openSidebar(){ document.getElementById('sidebarEl').classList.add('open'); document.getElementById('sidebarBackdrop').classList.add('show'); document.body.classList.add('sidebar-is-open'); }
 function closeSidebar(){ document.getElementById('sidebarEl').classList.remove('open'); document.getElementById('sidebarBackdrop').classList.remove('show'); document.body.classList.remove('sidebar-is-open'); }
-document.getElementById('mtMenuBtn').addEventListener('click', openSidebar);
+
+function closeMoreSheet(){ document.getElementById('moreSheet').classList.remove('show'); document.getElementById('moreSheetBackdrop').classList.remove('show'); }
+document.getElementById('mtMenuBtn').addEventListener('click', () => {
+  if(window.innerWidth <= 720){
+    document.getElementById('moreSheet').classList.add('show');
+    document.getElementById('moreSheetBackdrop').classList.add('show');
+  } else {
+    openSidebar();
+  }
+});
+document.getElementById('moreSheetBackdrop').addEventListener('click', closeMoreSheet);
+document.querySelectorAll('#moreSheet .more-sheet-list button[data-page]').forEach(btn => btn.addEventListener('click', () => { closeMoreSheet(); setActivePage(btn.dataset.page); }));
+document.getElementById('moreThemeToggle').addEventListener('click', () => document.getElementById('themeToggleBtn').click());
+document.getElementById('moreInstallBtn').addEventListener('click', () => {
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => { deferredInstallPrompt = null; });
+  } else if(/iPhone|iPad|iPod/.test(navigator.userAgent)){
+    alert('iPhone/iPad\'de kurmak için: alttaki Paylaş (□↑) simgesine dokunun, sonra "Ana Ekrana Ekle" seçeneğini seçin.');
+  } else {
+    alert('Tarayıcınız otomatik kurulumu desteklemiyor gibi görünüyor. Tarayıcı menüsünden (⋮) "Ana ekrana ekle" veya "Uygulamayı yükle" seçeneğini deneyebilirsiniz.');
+  }
+});
 
 function closeFabSheet(){ document.getElementById('fabSheet').classList.remove('show'); document.getElementById('fabSheetBackdrop').classList.remove('show'); }
 document.getElementById('mtFabBtn').addEventListener('click', () => { document.getElementById('fabSheet').classList.add('show'); document.getElementById('fabSheetBackdrop').classList.add('show'); });
@@ -2518,6 +2580,14 @@ document.getElementById('themeToggleBtn').addEventListener('click', async () => 
   if(lineChart || donutChart) setTimeout(renderDashboardWidgets, 0);
   try{ await window.storage.set('kutuphane-theme', next, false); }catch(e){}
 });
+
+// ---- PWA: Uygulama olarak kurma ----
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; });
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
 (async () => {
   try{ const t = await window.storage.get('kutuphane-theme', false); if(t && t.value === 'dark') document.body.setAttribute('data-theme','dark'); }catch(e){}
 })();
