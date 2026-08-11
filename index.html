@@ -19,6 +19,9 @@
         .overlay z-index 100 → 300 yapılarak düzeltildi
   v1.3  Mobil tasarım yenilendi: alttan açılan (bottom-sheet) modallar, daha büyük
         dokunma alanları, tek sütun düzenler, sıkışık üst bar ve kartlar düzeltildi
+  v1.4  Masaüstünde kitap/üye paneli açılınca ekranı karartan katman (backdrop)
+        genişlik sınırı olmadan tetikleniyor ve tüm tıklamaları engelliyordu;
+        artık sadece dar ekranlarda (panelin kayan pencere olduğu durumlarda) çalışıyor
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -55,9 +58,9 @@
     .shell{ grid-template-columns: 220px 1fr; }
     .rightpanel{ display:none; position:fixed; top:0; right:0; bottom:0; width:92%; max-width:380px; z-index:190; box-shadow:-10px 0 30px rgba(0,0,0,0.3); }
     .rightpanel.rp-open{ display:block; }
+    .rp-backdrop.show{ display:block; }
   }
   .rp-backdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,35,0.45); z-index:170; }
-  .rp-backdrop.show{ display:block; }
   .hamburger-btn{ display:none; }
   .sidebar-backdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,35,0.45); z-index:150; }
   .sidebar-backdrop.show{ display:block; }
@@ -370,7 +373,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.3</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v1.4</p>
   </aside>
 
   <div class="main-col">
