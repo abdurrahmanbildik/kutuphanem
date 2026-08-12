@@ -84,6 +84,13 @@
         renkli çubuk + başlık). Seçiminiz kaydediliyor. Ayrıca raf
         görünümünde kitabın üzerine gelince artık yazar adı da ipucu
         (tooltip) olarak görünüyor.
+  v2.5  Tema (koyu/açık) ve görünüm tercihleri (Tablo/Raf, raf teması,
+        sıralama, gruplama vb.) artık Firebase yerine cihazın kendi
+        tarayıcısında (localStorage) saklanıyor. Önceden bunlar da
+        Firebase'e yazıldığı için bir cihazda değiştirdiğinizde diğer
+        tüm cihazlarda da değişiyordu; artık her cihaz/tarayıcı kendi
+        tema ve görünüm tercihini hatırlıyor. Kitap/üye/ödünç verileri
+        hâlâ Firebase'de, cihazlar arası senkron kalmaya devam ediyor.
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -547,7 +554,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.4</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.5</p>
   </aside>
 
   <div class="main-col">
@@ -1111,9 +1118,9 @@ let selectedBookIds = new Set();
 let booksCurrentPage = 1;
 
 async function loadViewPrefs(){
-  try{ const res = await window.storage.get('kutuphane-view-prefs', false); if(res) viewPrefs = Object.assign(viewPrefs, JSON.parse(res.value)); }catch(e){}
+  try{ const raw = localStorage.getItem('kutuphane-view-prefs'); if(raw) viewPrefs = Object.assign(viewPrefs, JSON.parse(raw)); }catch(e){}
 }
-async function saveViewPrefs(){ try{ await window.storage.set('kutuphane-view-prefs', JSON.stringify(viewPrefs), false); }catch(e){} }
+function saveViewPrefs(){ try{ localStorage.setItem('kutuphane-view-prefs', JSON.stringify(viewPrefs)); }catch(e){} }
 
 function pageBooks(){
   return `
@@ -2787,12 +2794,12 @@ document.getElementById('globalSearch').addEventListener('input', (e) => {
   else if(currentPage==='tahsilat') renderTahsilat();
   else if(currentPage==='gecmis') renderHistoryArea();
 });
-document.getElementById('themeToggleBtn').addEventListener('click', async () => {
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
   const cur = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
   const next = cur === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('data-theme', next);
   if(lineChart || donutChart) setTimeout(renderDashboardWidgets, 0);
-  try{ await window.storage.set('kutuphane-theme', next, false); }catch(e){}
+  try{ localStorage.setItem('kutuphane-theme', next); }catch(e){}
 });
 
 // ---- PWA: Uygulama olarak kurma ----
@@ -2802,8 +2809,8 @@ if('serviceWorker' in navigator){
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 
-(async () => {
-  try{ const t = await window.storage.get('kutuphane-theme', false); if(t && t.value === 'dark') document.body.setAttribute('data-theme','dark'); }catch(e){}
+(() => {
+  try{ if(localStorage.getItem('kutuphane-theme') === 'dark') document.body.setAttribute('data-theme','dark'); }catch(e){}
 })();
 
 loadViewPrefs().then(loadData).then(() => { setTimeout(() => checkBrowserNotifications(false), 1500); });
