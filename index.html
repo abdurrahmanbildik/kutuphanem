@@ -56,6 +56,18 @@
         6'lı hızlı erişim kutucuk ızgarası (Kitaplar/Üyeler/Ödünç Ver/İadeler/
         Geciken/Raporlar — her biri farklı renk), özet kartları daha yuvarlak
         ve büyük ikonlu hale getirildi. Masaüstü görünümü değişmedi.
+  v2.2  Kitaplar sayfası ve Kitap Ekle/Düzenle modalı elden geçirildi:
+        - Mobilde tablo yerine artık gerçek kitap kartları listeleniyor (kapak
+          rengi, başlık, yazar, tür/raf etiketleri, tek dokunuşla Ödünç Ver)
+        - Modal sekmeleri (Temel/Raf/Detay/Medya) dolgulu, mavi vurgulu pill
+          tasarıma geçti; form alanları yuvarlak köşeli, odaklanınca mavi
+          parıltılı hale getirildi
+        - Kitap detay panelindeki kapak görseli dikey (2:3) büyütüldü ve artık
+          kırpılmadan tam gösteriliyor; üzerine tıklayınca direkt yeni kapak
+          seçip yükleyebiliyorsunuz (Düzenle'ye girmeden)
+        - Arama kutusu artık hangi sayfada olursanız olun çalışıyor: arama
+          yapılamayan bir sayfadaysanız (ör. Dashboard), yazmaya başlayınca
+          otomatik olarak Kitaplar sayfasına geçip sonuçları gösteriyor
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -203,7 +215,24 @@
   .spine .cilt-badge{ position:absolute; top:11px; right:-4px; font-size:8px; font-weight:700; background:var(--blue); color:#fff; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.25); }
   .shelf-empty-hint{ text-align:center; padding:40px 20px; color:var(--text-2); font-size:12.5px; }
 
-  th.sortable{ cursor:pointer; user-select:none; }
+  .book-cards{ display:none; flex-direction:column; gap:10px; }
+  .book-card{ display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:12px; cursor:pointer; }
+  .book-card:active{ background:var(--bg); }
+  .bc-thumb{ width:44px; height:58px; border-radius:8px; background:var(--blue-l); color:var(--blue); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex-shrink:0; }
+  .bc-thumb.st-okundu{ background:var(--green-l); color:var(--green); }
+  .bc-thumb.st-okunuyor{ background:var(--blue-l); color:var(--blue); }
+  .bc-thumb.st-okunacak{ background:var(--bg); color:var(--text-3); }
+  .bc-body{ flex:1; min-width:0; }
+  .bc-title{ font-size:13.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bc-author{ font-size:11.5px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:2px 0 6px; }
+  .bc-meta{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .bc-tag{ font-size:10px; font-weight:600; color:var(--text-2); background:var(--bg); border:1px solid var(--border); padding:2px 7px; border-radius:999px; }
+  .book-card .lendMiniBtn{ flex-shrink:0; }
+  @media (max-width:720px){
+    table.book-tbl{ display:none; }
+    .book-cards{ display:flex; }
+  }
+
   th.sortable .arrow{ opacity:.5; font-size:10px; margin-left:3px; }
   .bulkbar{ display:flex; align-items:center; gap:10px; background:var(--blue-l); border:1px solid var(--blue); border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:12.5px; }
   .bulkbar b{ color:var(--blue); }
@@ -257,8 +286,10 @@
   .rp-tab{ flex:1; text-align:center; padding:9px 4px; font-size:11.5px; font-weight:600; color:var(--text-2); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; }
   .rp-tab.active{ color:var(--blue); border-bottom-color:var(--blue); }
   .rp-close{ float:right; background:none; border:none; color:var(--text-3); font-size:16px; cursor:pointer; }
-  .rp-cover{ width:100%; height:150px; border-radius:8px; background:var(--blue-l); display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:34px; overflow:hidden; margin-bottom:12px; }
-  .rp-cover img{ width:100%; height:100%; object-fit:cover; }
+  .rp-cover{ width:66%; max-width:220px; aspect-ratio:2/3; margin:0 auto 14px; border-radius:10px; background:var(--blue-l); display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:34px; overflow:hidden; cursor:pointer; position:relative; box-shadow:0 6px 18px rgba(20,25,45,0.12); transition:transform .12s ease; }
+  .rp-cover:hover{ transform:scale(1.02); }
+  .rp-cover:hover::after{ content:"✎ Değiştir"; position:absolute; inset:auto 0 0 0; background:rgba(0,0,0,0.55); color:#fff; font-size:10.5px; font-weight:600; text-align:center; padding:6px 0; }
+  .rp-cover img{ width:100%; height:100%; object-fit:contain; background:#0e1424; }
   .rp-title{ font-size:15.5px; font-weight:600; margin:0 0 2px; }
   .rp-author{ font-size:12.5px; color:var(--text-2); margin:0 0 12px; }
   .rp-info-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 10px; font-size:12px; margin-bottom:14px; }
@@ -280,9 +311,10 @@
   .modal{ background:var(--card); width:100%; max-width:520px; border-radius:14px; padding:24px; max-height:88vh; overflow-y:auto; margin:auto; }
   .modal h2{ font-size:17px; margin:0 0 2px; }
   .modal .sub{ font-size:12px; color:var(--text-2); margin-bottom:16px; }
-  .field{ margin-bottom:13px; }
-  .field label{ display:block; font-size:11.5px; font-weight:600; color:var(--text-2); margin-bottom:5px; }
-  .field input, .field select, .field textarea{ width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--border); font-size:13.5px; background:var(--bg); color:var(--text); }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:11px; font-weight:700; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.3px; }
+  .field input, .field select, .field textarea{ width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); font-size:13.5px; background:var(--bg); color:var(--text); transition:border-color .12s ease, box-shadow .12s ease; }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-l); }
   .field textarea{ resize:vertical; min-height:50px; }
   .field-inline{ display:flex; gap:8px; align-items:flex-end; }
   .field-inline input{ flex:1; }
@@ -293,9 +325,9 @@
   .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; flex-wrap:wrap; }
   .close-x{ float:right; background:none; border:none; font-size:18px; color:var(--text-3); cursor:pointer; }
   .modal-wide{ max-width:640px; }
-  .book-tabs{ display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:16px; flex-wrap:wrap; }
-  .book-tab{ padding:9px 12px; font-size:12.5px; border:none; background:none; cursor:pointer; color:var(--text-2); border-bottom:2px solid transparent; white-space:nowrap; }
-  .book-tab.active{ color:var(--blue); border-bottom-color:var(--blue); font-weight:600; }
+  .book-tabs{ display:flex; gap:5px; border-bottom:none; margin-bottom:18px; flex-wrap:wrap; background:var(--bg); padding:5px; border-radius:12px; }
+  .book-tab{ flex:1; padding:9px 12px; font-size:12px; font-weight:600; border:none; border-radius:9px; background:none; cursor:pointer; color:var(--text-2); white-space:nowrap; transition:background .12s ease, color .12s ease; }
+  .book-tab.active{ color:#fff; background:var(--blue); font-weight:700; box-shadow:0 2px 8px rgba(47,111,237,0.3); }
   .book-tab-panel{ display:none; }
   .book-tab-panel.active{ display:block; }
   .volume-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
@@ -386,7 +418,7 @@
     table.tbl tr{ padding:10px 6px; border-radius:12px; }
     table.tbl td{ font-size:12.5px; }
 
-    .rp-cover{ height:130px; }
+    .rp-cover{ width:52%; }
     .rp-info-grid{ grid-template-columns:1fr 1fr; }
   }
 
@@ -460,7 +492,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.1</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.2</p>
   </aside>
 
   <div class="main-col">
@@ -1101,7 +1133,23 @@ function booksTableHtml(list){
     if(col==='avail' && viewPrefs.sortMode==='avail_desc') return '▼'; if(col==='avail' && viewPrefs.sortMode==='avail_asc') return '▲';
     return '';
   };
-  return `<table class="tbl"><thead><tr>
+  const cards = `<div class="book-cards">${list.map(b => {
+    const av=bookTotalAvailable(b); const vols=ensureVolumes(b);
+    return `<div class="book-card clickable" data-id="${b.id}">
+      <div class="bc-thumb st-${b.status}">${escapeHtml((b.title||'?').slice(0,1))}</div>
+      <div class="bc-body">
+        <div class="bc-title">${escapeHtml(b.title)}${b.hasPdf?' 📄':''}</div>
+        <div class="bc-author">${escapeHtml(b.author||'Yazar belirtilmemiş')}</div>
+        <div class="bc-meta">
+          ${av>0?`<span class="badge green">${av} müsait</span>`:'<span class="badge red">Tükendi</span>'}
+          ${b.genre?`<span class="bc-tag">${escapeHtml(b.genre)}</span>`:''}
+          ${b.location?`<span class="bc-tag">📍 ${escapeHtml(b.location)}</span>`:''}
+        </div>
+      </div>
+      <button class="btn sm primary lendMiniBtn" data-id="${b.id}" ${av<=0?'disabled':''}>Ver</button>
+    </div>`;
+  }).join('')}</div>`;
+  return `<table class="tbl book-tbl"><thead><tr>
     <th style="width:24px;"><input type="checkbox" id="selectAllChk" ${allSelected?'checked':''}></th>
     <th class="sortable" data-col="title">Kitap <span class="arrow">${sortArrow('title')||'⇅'}</span></th>
     <th class="sortable" data-col="genre">Tür <span class="arrow">${sortArrow('genre')}</span></th>
@@ -1112,7 +1160,7 @@ function booksTableHtml(list){
     ${list.map(b => { const av=bookTotalAvailable(b); const vols=ensureVolumes(b); const checked = selectedBookIds.has(b.id);
       return `<tr class="clickable" data-id="${b.id}"><td data-label=""><input type="checkbox" class="rowChk" data-id="${b.id}" ${checked?'checked':''} onclick="event.stopPropagation()"></td><td data-label="Kitap"><div class="row-title-cell"><div class="book-thumb">${escapeHtml((b.title||'?').slice(0,1))}</div><div><div style="font-weight:500;">${escapeHtml(b.title)}${b.hasPdf?' 📄':''}</div><div style="color:var(--text-2); font-size:11.5px;">${escapeHtml(b.author||'')}</div></div></div></td><td data-label="Tür">${escapeHtml(b.genre||'-')}</td><td data-label="Cilt/Nüsha">${vols.length}c / ${bookTotalCopies(b)}n</td><td data-label="Müsait">${av>0?`<span class="badge green">${av} müsait</span>`:'<span class="badge red">Tükendi</span>'}</td><td data-label="Raf">${escapeHtml(b.location||'-')}</td><td data-label=""><button class="btn sm lendMiniBtn" data-id="${b.id}" ${av<=0?'disabled':''}>Ödünç Ver</button></td></tr>`;
     }).join('')}
-  </tbody></table>`;
+  </tbody></table>${cards}`;
 }
 
 function shelfSpineHtml(b){
@@ -1192,6 +1240,7 @@ function renderBooksTable(){
 
 function bindBooksTableRowEvents(area){
   area.querySelectorAll('tr.clickable').forEach(tr => tr.addEventListener('click', (e) => { if(e.target.closest('button') || e.target.type==='checkbox') return; openBookPanel(tr.dataset.id); }));
+  area.querySelectorAll('.book-card.clickable').forEach(c => c.addEventListener('click', (e) => { if(e.target.closest('button')) return; openBookPanel(c.dataset.id); }));
   area.querySelectorAll('.lendMiniBtn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); openLoanModal(btn.dataset.id); }));
   area.querySelectorAll('.rowChk').forEach(chk => chk.addEventListener('change', () => {
     if(chk.checked) selectedBookIds.add(chk.dataset.id); else selectedBookIds.delete(chk.dataset.id);
@@ -1905,7 +1954,8 @@ function rpBookHtml(id){
   const vols = ensureVolumes(b); const av = bookTotalAvailable(b);
   const activeLoan = loans.find(l=>l.bookId===id && !l.returnDate);
   return `
-    <div class="rp-cover" id="rpCoverBox">${b.hasCover ? `<img id="rpCoverImg">` : '📗'}</div>
+    <div class="rp-cover" id="rpCoverBox" title="Kapak görselini değiştirmek için tıklayın">${b.hasCover ? `<img id="rpCoverImg">` : '📗'}</div>
+    <input type="file" id="rpCoverFileInput" accept="image/*" style="display:none;">
     <p class="rp-title">${escapeHtml(b.title)}</p>
     <p class="rp-author">${escapeHtml(b.author||'')}</p>
     <div class="rp-info-grid">
@@ -1988,6 +2038,23 @@ function bindRightPanelEvents(){
   const blkBtn=document.getElementById('rpBlkMemberBtn'); if(blkBtn && blkBtn.dataset.id) blkBtn.addEventListener('click', ()=>{ const m=members.find(x=>x.id===blkBtn.dataset.id); if(!m) return; m.blacklisted=!m.blacklisted; saveData(); renderRightPanel(); if(document.getElementById('membersTableArea')) renderMembersTable(); });
   const delMBtn=document.getElementById('rpDelMemberBtn'); if(delMBtn && delMBtn.dataset.id) delMBtn.addEventListener('click', ()=>deleteMember(delMBtn.dataset.id));
   document.querySelectorAll('.markLostBtn').forEach(btn => btn.addEventListener('click', () => markVolumeLost(rpBookId, Number(btn.dataset.vol))));
+  const rpCoverBox = document.getElementById('rpCoverBox');
+  const rpCoverFileInput = document.getElementById('rpCoverFileInput');
+  if(rpCoverBox && rpCoverFileInput){
+    rpCoverBox.addEventListener('click', () => rpCoverFileInput.click());
+    rpCoverFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if(!file) return;
+      if(file.size > MAX_COVER_BYTES){ alert('Görsel çok büyük (en fazla ~3MB olmalı). Daha küçük bir dosya seçin.'); e.target.value=''; return; }
+      try{
+        const dataUrl = await readFileAsDataUrl(file);
+        await window.storage.set('book-cover:'+rpBookId, dataUrl, false);
+        const b = books.find(x=>x.id===rpBookId);
+        if(b){ b.hasCover = true; await saveData(); }
+        renderRightPanel();
+      }catch(err){ alert('Görsel okunamadı.'); }
+      e.target.value='';
+    });
+  }
 }
 function openBookPanel(id){ rpMode='book'; rpBookId=id; rpMemberName=null; rpTab='kitap'; renderRightPanel(); }
 function openMemberPanel(name){ rpMode='member'; rpMemberName=name; rpTab='uye'; renderRightPanel(); }
@@ -2619,6 +2686,8 @@ document.getElementById('shortcutReport').addEventListener('click', () => setAct
 document.getElementById('globalSearch').addEventListener('input', (e) => {
   globalSearch = e.target.value;
   booksCurrentPage = 1; membersPage = 1; activeLoansPage = 1; returnsPage = 1; historyPage = 1;
+  const searchablePages = ['kitaplar','uyeler','odunc','iadeler','geciken','tahsilat','gecmis'];
+  if(globalSearch && !searchablePages.includes(currentPage)){ setActivePage('kitaplar'); return; }
   if(currentPage==='kitaplar') renderBooksTable();
   else if(currentPage==='uyeler') renderMembersTable();
   else if(currentPage==='odunc') renderActiveLoans();
