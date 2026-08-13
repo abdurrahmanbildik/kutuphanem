@@ -101,6 +101,16 @@
         "⚙ Filtrele & Sırala" butonuna toplandı, basınca hepsi alttan açılan
         şık bir panelde çıkıyor. Görünüm anahtarı (Tablo/Raf) ve
         "+ Kitap Ekle" üstte, her zaman görünür kalıyor.
+  v2.7  Kitaplar sayfasını (özellikle mobilde) açtığınızda ekranın sağa
+        kayması / yatay olarak taşması sorunu giderildi — sayfanın artık
+        hiçbir durumda yatay kaydırılamaması için güvenlik önlemi eklendi.
+  v2.8  Mobil alt menü artık sabit: kitap detay paneli açıkken bile
+        kaybolmuyor, her zaman en üstte görünür kalıyor (panel içeriğine de
+        alt menünün arkasında kalmaması için boşluk eklendi).
+        Kitaplar sayfasında arama kutusuna bir ISBN yazıp kitap kütüphanede
+        bulunamazsa, sonuç ekranında "🌐 İnternette ara ve ekle" butonu
+        çıkıyor — tıklayınca Kitap Ekle formunu o ISBN ile otomatik açıp
+        kendi servisiniz → Google Books → Open Library sırasıyla arıyor.
 -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -133,7 +143,8 @@
   body[data-theme="dark"] .book-thumb{ background:var(--blue-l); }
   body[data-theme="dark"] .rp-cover, body[data-theme="dark"] .rp-badge, body[data-theme="dark"] .activity-item, body[data-theme="dark"] .rp-desc, body[data-theme="dark"] .rp-active-loan{ background:var(--bg); }
   *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); font-size:14px; transition:background .2s ease, color .2s ease; }
+  html{ overflow-x:hidden; }
+  body{ margin:0; background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); font-size:14px; transition:background .2s ease, color .2s ease; overflow-x:hidden; max-width:100vw; }
   .shell{ display:grid; grid-template-columns: 220px 1fr 300px; min-height:100vh; }
   .sidebar{ background:var(--navy); color:#fff; display:flex; flex-direction:column; padding:18px 14px; position:sticky; top:0; height:100vh; overflow-y:auto; }
   .rightpanel{ background:var(--card); border-left:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:16px; }
@@ -502,6 +513,7 @@
     table.tbl td{ font-size:12.5px; }
 
     .rp-cover{ width:52%; }
+    .rightpanel{ padding-bottom:82px; }
     .rp-info-grid{ grid-template-columns:1fr 1fr; }
   }
 
@@ -524,7 +536,7 @@
   .more-sheet-footer button{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13.5px; font-weight:600; cursor:pointer; }
   .more-sheet-footer button.install{ background:var(--blue); color:#fff; border-color:var(--blue); }
   @media (max-width:720px){
-    .mobile-tabbar{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:120; background:var(--card); border-top:1px solid var(--border); padding:6px 4px calc(6px + env(safe-area-inset-bottom)); align-items:center; justify-content:space-around; box-shadow:0 -4px 18px rgba(0,0,0,0.08); }
+    .mobile-tabbar{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:200; background:var(--card); border-top:1px solid var(--border); padding:6px 4px calc(6px + env(safe-area-inset-bottom)); align-items:center; justify-content:space-around; box-shadow:0 -4px 18px rgba(0,0,0,0.08); }
     .mobile-tabbar button{ background:none; border:none; color:var(--text-3); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9.5px; font-weight:600; padding:6px 4px; border-radius:10px; cursor:pointer; flex:1; }
     .mobile-tabbar button .mt-icon{ font-size:18px; line-height:1; }
     .mobile-tabbar button.active{ color:var(--blue); }
@@ -532,7 +544,7 @@
     .mobile-tabbar .mt-fab .mt-icon{ width:50px; height:50px; border-radius:50%; background:var(--blue); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(47,111,237,0.45); }
     .mobile-tabbar .mt-fab{ color:var(--text-3); }
     .content{ padding-bottom:88px; }
-    body.sidebar-is-open .mobile-tabbar, body.rightpanel-is-open .mobile-tabbar{ display:none; }
+    body.sidebar-is-open .mobile-tabbar, body.rightpanel-is-open .mobile-tabbar{ display:flex; }
   }
   @media (max-width:400px){
     .stat-grid{ grid-template-columns: 1fr 1fr; }
@@ -575,7 +587,7 @@
       <div><p>Kütüphaneci</p><p class="role">Yönetici</p></div>
       <button class="theme-toggle" id="themeToggleBtn" title="Tema">🌗</button>
     </div>
-    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.6</p>
+    <p style="text-align:center; font-size:9.5px; color:#5a6389; margin:10px 0 0;">v2.8</p>
   </aside>
 
   <div class="main-col">
@@ -1315,7 +1327,17 @@ function renderBooksTable(){
 
   if(cardArea) cardArea.classList.toggle('no-chrome', viewPrefs.viewMode === 'raf');
 
-  if(list.length===0){ area.innerHTML = `<div class="empty"><div class="big">Kitap bulunamadı</div><p>Filtreyi değiştirin ya da yeni kitap ekleyin.</p></div>`; document.getElementById('bulkBarArea').innerHTML=''; return; }
+  if(list.length===0){
+    const cleanIsbn = (globalSearch||'').replace(/[-\s]/g,'');
+    const looksLikeIsbn = /^(97[89]\d{10}|\d{9}[\dXx])$/.test(cleanIsbn);
+    area.innerHTML = `<div class="empty"><div class="big">Kitap bulunamadı</div><p>Filtreyi değiştirin ya da yeni kitap ekleyin.</p>
+      ${looksLikeIsbn ? `<button class="btn primary" id="isbnWebSearchBtn" style="margin-top:10px;" data-isbn="${escapeHtml(cleanIsbn)}">🌐 "${escapeHtml(cleanIsbn)}" ISBN'ini internette ara ve ekle</button>` : ''}
+    </div>`;
+    document.getElementById('bulkBarArea').innerHTML='';
+    const webBtn = document.getElementById('isbnWebSearchBtn');
+    if(webBtn) webBtn.addEventListener('click', () => searchIsbnFromWebAndOpenAdd(webBtn.dataset.isbn));
+    return;
+  }
 
   if(viewPrefs.viewMode === 'raf'){
     const groupForShelf = viewPrefs.groupMode === 'yok' ? 'tur' : viewPrefs.groupMode;
@@ -2234,6 +2256,13 @@ let selectedRating=0;
 function updateStarUI(){ document.querySelectorAll('#starPicker span').forEach(s=>s.classList.toggle('on', Number(s.dataset.v)<=selectedRating)); }
 function updateRatingVisibility(){ document.getElementById('ratingField').style.display = document.getElementById('f_status').value==='okundu'?'block':'none'; }
 function openAddBook(){ editingBookId=null; document.getElementById('bookModalTitle').textContent='Yeni Kitap'; resetBookForm(); openBookModal(); }
+function searchIsbnFromWebAndOpenAdd(isbn){
+  openAddBook();
+  setTimeout(() => {
+    const f = document.getElementById('f_isbn'); if(f) f.value = isbn;
+    const btn = document.getElementById('lookupIsbnBtn'); if(btn) btn.click();
+  }, 0);
+}
 function openEditBook(id){
   const b=books.find(x=>x.id===id); if(!b) return; editingBookId=id;
   document.getElementById('bookModalTitle').textContent='Kitabı Düzenle';
